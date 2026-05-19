@@ -1,13 +1,13 @@
 ## Topic Covered In this Lesson
 - ##  String vs &str :
-    - String type is owned, Growable , Dynamic and  stored in Head.
+    - String type is owned, Growable , Dynamic and  stored in Heap.
     ```rust 
     fn main() {
         let name = String::from("rust");
         println!("{}" , name);
     }
     ```
-    - &str type is borrwed , fixed-sized , lightweight and  immutable
+    - &str type is borrowed , fixed-sized , lightweight and  immutable
     ```rust
         let name = "rust";
         println!("{}" , name);
