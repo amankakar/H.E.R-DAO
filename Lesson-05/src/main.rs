@@ -1,4 +1,4 @@
-use std::panic;
+use std::{collections::{HashMap, hash_map}, panic};
 
 #[derive(Debug, PartialEq, Clone, Copy, Eq)]
 enum TransactionStatus {
@@ -28,7 +28,7 @@ struct Transaction {
 #[derive(Debug)]
 struct Block {
     block_id: u64,
-    transactions: Vec<Transaction>,
+    transactions: HashMap<u64, Transaction>,
     status: BlockStatus,
 }
 
@@ -40,14 +40,17 @@ enum BlockError {
 fn main() {
     let mut block1 = Block::new(
         1,
-        vec![Transaction {
+    HashMap::from([
+        (
+        1,
+         Transaction {
             transaction_id: 1,
             amount: 100,
             sender: String::from("Aman Khan"),
             receiver: String::from("John Doe"),
             timestamp: 1634567890,
             status: TransactionStatus::Pending,
-        }],
+        })])
     );
     block1.print();
     let is_added = block1.add_transaction(Transaction {
@@ -105,7 +108,7 @@ fn main() {
 }
 
 impl Block {
-    fn new(block_id: u64, transactions: Vec<Transaction>) -> Block {
+    fn new(block_id: u64, transactions: HashMap<u64, Transaction>) -> Block {
         Block {
             block_id,
             transactions,
@@ -120,7 +123,7 @@ impl Block {
     fn add_transaction(&mut self, transaction: Transaction) -> Result<(), BlockError> {
         match (self.status) {
             BlockStatus::InProcess => {
-                self.transactions.push(transaction);
+                self.transactions.insert(transaction.transaction_id, transaction);
                 Ok(())
             }
             _ => Err(BlockError::BlockFinalized),
@@ -131,7 +134,7 @@ impl Block {
         if self
             .transactions
             .iter()
-            .all(|tx| tx.status == TransactionStatus::Completed)
+            .all(|(_,tx)| tx.status == TransactionStatus::Completed)
         {
             self.status = BlockStatus::Mined;
             return true;
@@ -140,7 +143,7 @@ impl Block {
         }
     }
     fn get_transaction_mut(&mut self, transaction_id: u64) -> Option<&mut Transaction> {
-        for tx in &mut self.transactions {
+        for tx in &mut self.transactions.values_mut() {
             if tx.transaction_id == transaction_id {
                 return Some(tx);
             }
@@ -148,17 +151,16 @@ impl Block {
         None
     }
 
-    fn get_block_all_transactions(&self) -> &Vec<Transaction> {
-        &self.transactions
+    fn get_block_all_transactions(&self) -> Vec<&Transaction> {
+        self.transactions.values().collect()
     }
 
     fn get_transaction(&self, transaction_id: u64) -> Option<&Transaction> {
-        for tx in &self.transactions {
-            if tx.transaction_id == transaction_id {
-                return Some(tx);
-            }
-        }
-        None
+       let tx =  self.transactions.get(&transaction_id);
+         match tx {
+          Some(transaction) => Some(&transaction),
+          None => None,
+         }
     }
 }
 
