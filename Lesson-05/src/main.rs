@@ -93,7 +93,14 @@ fn main() {
         transaction.transaction_status(TransactionStatus::Completed);
     }
     block1.validate_block();
-       let is_added = block1.add_transaction(Transaction::new(
+       
+    block1.print();
+    println!("------------------All transactions in the block:---------------------------------");
+    block1.get_block_all_transactions().iter().for_each(|tx| tx.print());
+    println!("------------------------Getting transaction with ID 2:--------------------------------");
+    block1.get_transaction(2).map(|tx| tx.print());
+
+    let is_added = block1.add_transaction(Transaction::new(
         3,
         25,
         String::from("Alice"),
@@ -104,7 +111,6 @@ fn main() {
     if let Err(_) = is_added {
         panic!("Failed to add transaction to the block.");
     }
-    block1.print();
 }
 
 impl Block {
