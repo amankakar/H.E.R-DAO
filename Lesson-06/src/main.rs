@@ -1,8 +1,11 @@
+use thiserror::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 enum ErrorMessage {
-UnderFlow(String),
-OverFlow(String),
+    #[error("UnderFlow: {0}")]
+    UnderFlow(String),
+    #[error("OverFlow: {0}")]
+    OverFlow(String),
 }
 
 fn main() {
@@ -20,11 +23,14 @@ fn perform_sub() -> Result<u32, ErrorMessage> {
 
     match a.checked_sub(b) {
         Some(c) => Ok(c),
-        None => Err(ErrorMessage::UnderFlow(format!(" {} - {} = UnderFlow", a, b))),
+        None => Err(ErrorMessage::UnderFlow(format!(
+            " {} - {} = UnderFlow",
+            a, b
+        ))),
     }
 }
 
-fn perform_add()-> Result<u32, ErrorMessage> {
+fn perform_add() -> Result<u32, ErrorMessage> {
     let a: u32 = 6;
     let b: u32 = 10;
 

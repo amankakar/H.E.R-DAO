@@ -3,8 +3,7 @@
 
 ### panic!
 
-If the Rust program could not recover or have no way to handle the error state it will emit the panic error: 
-
+A `panic!` occurs when the program encounters an unrecoverable error state. In such cases, Rust stops execution immediately and unwinds the stack.
 ```rust
 fn main() {
     let a : u32 = 6 ;
@@ -22,7 +21,7 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 ```
 
 ### recoverable
-Recovereable is state where the rust program do not need to crash it can contune its normal executation.
+A recoverable error is a situation where the program can handle the error and continue execution without crashing.
 
 ```rust
 fn main() {
@@ -40,11 +39,12 @@ output :
 ```bash
  6 - 10 = Underflow
 ```
-The programm will not panic it will move the execution of None arm
-
+In this case, the program does not panic. Instead, it handles the `None` case safely and continues execution.
 ## Result<T, E>
-Result is usefull where we need to return either Error or acutal data . like in case if some error occured than we retuuuuurn the `Err` otherwise we return the `Ok`.
 
+`Result<T, E>` is used when a function may either return a successful value `(Ok)` or an error `(Err)`.
+
+It is the standard way in Rust to represent recoverable failures.
 ```rust
 fn main() {
     let result = perform_sub();
@@ -71,7 +71,9 @@ Error:  6 - 10 = Underflow
 ```
 
 ## ? operator
-This `?` operator is used where we did not want to handle the error case instead we want to propegate it to other funciton.
+The `?` operator is used to propagate errors to the caller instead of handling them locally.
+
+If an error occurs, it is automatically returned from the current function.
 
 ```rust
 fn main() {
@@ -105,7 +107,7 @@ Error:  6 - 10 = Underflow
 ```
 ## custom error enums
 
-The Other way to show the Error message and handle error case we can use enum to define different error state and then using match arm to emit the error with the appropraite enum. 
+Another way to handle errors in Rust is by defining custom error types using enums. This allows you to represent multiple error states in a structured way.
 
 ```rust
 
@@ -151,3 +153,61 @@ output :
 Error: UnderFlow(" 6 - 10 = UnderFlow")
 ```
 ## thiserror
+
+thiserror is the standard Rust crate used to create clean, idiomatic custom error types with very little boilerplate.
+
+It automatically implements:
+```rust 
+Display
+Debug
+std::error::Error
+```
+
+```rust
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+enum ErrorMessage {
+    #[error("UnderFlow: {0}")]
+    UnderFlow(String),
+    #[error("OverFlow: {0}")]
+    OverFlow(String),
+}
+
+fn main() {
+    let result = perform_sub();
+    match result {
+        Ok(value) => println!("Subtraction result: {:?}", value),
+        Err(e) => println!("Error: {:?}", e),
+    }
+}
+
+// this will Return the error
+fn perform_sub() -> Result<u32, ErrorMessage> {
+    let a: u32 = 6;
+    let b: u32 = 10;
+
+    match a.checked_sub(b) {
+        Some(c) => Ok(c),
+        None => Err(ErrorMessage::UnderFlow(format!(
+            " {} - {} = UnderFlow",
+            a, b
+        ))),
+    }
+}
+
+fn perform_add() -> Result<u32, ErrorMessage> {
+    let a: u32 = 6;
+    let b: u32 = 10;
+
+    match a.checked_add(b) {
+        Some(c) => Ok(c),
+        None => Err(ErrorMessage::OverFlow(format!(" {} + {} = OverFlow", a, b))),
+    }
+}
+```
+
+output : 
+```bash
+Error: UnderFlow(" 6 - 10 = UnderFlow")
+```
