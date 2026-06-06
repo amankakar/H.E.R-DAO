@@ -3,9 +3,11 @@
 mod blockchain;
 use blockchain::block::Block;
 use blockchain::transaction::Transaction;
-use blockchain::status::{BlockStatus, TransactionStatus}; 
+use blockchain::status::{TransactionStatus}; 
 
 use std::collections::HashMap;
+
+use crate::blockchain::block;
 
 
 fn main() {
@@ -70,7 +72,8 @@ fn main() {
     block1.get_block_all_transactions().iter().for_each(|tx| tx.print());
     println!("------------------------Getting transaction with ID 2:--------------------------------");
     block1.get_transaction(2).map(|tx : &Transaction| tx.print());
-
+    println!("Block ID: {}", block1.get_block_id() );
+    
     let is_added = block1.add_transaction(Transaction::new(
         3,
         25,

@@ -1,8 +1,6 @@
 
 
-use crate::blockchain::errors::BlockError;
-use crate::blockchain::block::{Block};
-use crate::blockchain::status::{BlockStatus, TransactionStatus};
+use crate::blockchain::status::{TransactionStatus};
 #[derive(Debug)]
 pub struct Transaction {
     pub transaction_id: u64,

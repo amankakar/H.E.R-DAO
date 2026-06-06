@@ -26,7 +26,7 @@ impl Block {
     }
 
     pub fn add_transaction(&mut self, transaction: Transaction) -> Result<(), BlockError> {
-        match (self.status) {
+        match self.status {
             BlockStatus::InProcess => {
                 self.transactions.insert(transaction.transaction_id, transaction);
                 Ok(())
@@ -67,5 +67,8 @@ impl Block {
           None => None,
          }
     }
+    pub fn get_block_id(&self) -> u64 {
+        self.block_id
+    }   
 }
 
