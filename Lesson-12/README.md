@@ -154,7 +154,96 @@ Output :
 Status: 403 Forbidden
 ```
 ## Processing API response
+After receiving an HTTP response, we often need its content.
 
+```rust
 
+use reqwest::{Error};
+#[tokio::main]
+async fn main() -> Result<(), Error> {
+
+    let body = reqwest::get(
+        "https://httpbin.org/get"
+    )
+    .await?
+    .text()
+    .await?;
+
+    println!("{}", body);
+
+    Ok(())
+}
+```
+
+Output : 
+```bash
+{
+  "args": {}, 
+  "headers": {
+    "Accept": "*/*", 
+    "Host": "httpbin.org", 
+    "X-Amzn-Trace-Id": "Root=1-6a32e464-364286497488600153d0eece"
+  }, 
+  "origin": "203.101.190.61", 
+  "url": "https://httpbin.org/get"
+}
+```
+## Serde
+As from our above example we can see that the API return a JSON response  but we have no way to parse it. To parse this response and process its content we need to use `Serde` crate. 
+
+```toml
+serde = { version = "1", features = ["derive"] }
+serde_json = "1.0"
+```
+```rust
+
+use reqwest::{Error};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+#[derive(Debug,Serialize, Deserialize)]
+struct ResponseObject{
+    pub args: HashMap<String, String>,
+    pub headers: Headers,
+    pub origin: String,
+    pub url: String,
+}
+
+#[derive(Debug,Serialize, Deserialize)]
+struct Headers {
+    #[serde(rename = "Accept")]
+    pub accept: String,
+    #[serde(rename = "Host")]
+    pub host: String,
+    #[serde(rename = "X-Amzn-Trace-Id")]
+    pub x_amzn_trace_id: String,
+}
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+
+    let body = reqwest::get(
+        "https://httpbin.org/get"
+    )
+    .await?
+    .text()
+    .await?;
+
+    let response: ResponseObject = serde_json::from_str(&body)?;
+
+    println!("{:?}", response);
+    println!{"Origin: {}", response.origin};
+    println!{"URL: {}", response.url};
+    println!{"Accept Header: {:?}", response.headers};
+
+    Ok(())
+}
+```
+Output :
+```bash
+ResponseObject { args: {}, headers: Headers { accept: "*/*", host: "httpbin.org", x_amzn_trace_id: "Root=1-6a32eb9e-335f5f896235a42b6917a8f0" }, origin: "203.101.190.61", url: "https://httpbin.org/get" }
+Origin: 203.101.190.61
+URL: https://httpbin.org/get
+Accept Header: Headers { accept: "*/*", host: "httpbin.org", x_amzn_trace_id: "Root=1-6a32eb9e-335f5f896235a42b6917a8f0" }
+```
 
 
