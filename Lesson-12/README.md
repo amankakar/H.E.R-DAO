@@ -245,5 +245,128 @@ Origin: 203.101.190.61
 URL: https://httpbin.org/get
 Accept Header: Headers { accept: "*/*", host: "httpbin.org", x_amzn_trace_id: "Root=1-6a32eb9e-335f5f896235a42b6917a8f0" }
 ```
+## Http Client 
+Rather then creating new reqwest object for each http call we can create on client object and reuse it when ever required.
+```rust
+use reqwest::Client;
 
+#[tokio::main]
+async fn main() -> Result<(), reqwest::Error> {
+
+    let client = Client::new();
+
+    let response = client
+        .get("https://httpbin.org/get")
+        .send()
+        .await?;
+
+    println!("{}", response.status());
+
+    Ok(())
+}
+```
+The `client` variable can be used for other API calls as well.
+Output :
+```bash
+200 OK
+```
+## Concurrent HTTP calls
+The Best usage of HTTP Calls in rust is that instead of waiting for each request one by one we send all the request together.
+```rust
+use reqwest::Client;
+
+#[tokio::main]
+async fn main() -> Result<(), reqwest::Error> {
+
+    let client = Client::new();
+
+    let response = client
+        .get("https://httpbin.org/get")
+        .send();
+    let response1 = client
+        .get("https://httpbin.org/get")
+        .send();
+let (response , response1) = tokio::join!(response, response1);
+    println!("Response :: {:?}", response);
+    println!("Response 1 :: {:?}", response1);
+
+    Ok(())
+}
+```
+Output :
+```bash
+Response :: Ok(Response { url: "https://httpbin.org/get", status: 200, headers: {"date": "Thu, 18 Jun 2026 05:11:52 GMT", "content-type": "application/json", "content-length": "222", "connection": "keep-alive", "server": "gunicorn/19.9.0", "access-control-allow-origin": "*", "access-control-allow-credentials": "true"} })
+Response 1 :: Ok(Response { url: "https://httpbin.org/get", status: 200, headers: {"date": "Thu, 18 Jun 2026 05:11:51 GMT", "content-type": "application/json", "content-length": "222", "connection": "keep-alive", "server": "gunicorn/19.9.0", "access-control-allow-origin": "*", "access-control-allow-credentials": "true"} })
+```
+## Timeout Handling
+The external server can hangup on a API call indefinitely to avoid such a situation we need to set the timeout. it will wait for that time period for each request if the server does not respond within this time frame, the request will fail with a timeout error.
+```rust
+use reqwest::Client;
+use std::time::Duration;
+
+#[tokio::main]
+async fn main() -> Result<(), reqwest::Error> {
+
+    let client = Client::builder()
+                .timeout(Duration::from_secs(10))// each request will have a timeout of 10 seconds,
+                .build()?;
+    let response = client
+        .get("https://httpbin.org/get")
+        .send();
+    let response1 = client
+        .get("https://httpbin.org/get")
+        .send();
+let (response , response1) = tokio::join!(response, response1);
+    println!("Response :: {:?}", response);
+    println!("Response 1 :: {:?}", response1);
+
+    Ok(())
+}
+```
+## Error Handling
+The API call can fail because of connection error , timeout or invalid response. So We need to also handle the error case. 
+```rust
+use reqwest::Client;
+use std::time::Duration;
+
+#[tokio::main]
+async fn main() -> Result<(), reqwest::Error> {
+
+    let client = Client::builder()
+                .timeout(Duration::from_secs(10))// each request will have a timeout of 10 seconds,
+                .build()?;
+    let response = client
+        .get("https://httpbin.org/get")
+        .send();
+    let response1 = client
+        .get("https://httpbin.org/get")
+        .send();
+let (response , response1) = tokio::join!(response, response1);
+match response {
+    Ok(res) => println!("Response 1 :: {:?}", res),
+    Err(e) => println!("Error in Response 1 :: {:?}", e)}
+match response1 {
+    Ok(res) => println!("Response 2 :: {:?}", res),
+    Err(e) => println!("Error in Response 2 :: {:?}", e)
+    }
+
+    Ok(())
+}
+```
+Last but not the least The Generic flow of Async call work as follows :
+```bash
+Async Function
+      ↓
+Returns Future
+      ↓
+Tokio Runtime Executes Future
+      ↓
+await Suspends Execution
+      ↓
+Reqwest Makes Async HTTP Calls
+      ↓
+Serde Parses JSON
+      ↓
+join! Runs Multiple Requests Concurrently
+```
 
